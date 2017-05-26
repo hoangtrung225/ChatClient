@@ -46,7 +46,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}
 
 	//Construct socket	
-	SOCKET client;
 	client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	//(optional) Set time-out for receiving
