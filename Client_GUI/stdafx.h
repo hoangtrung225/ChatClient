@@ -25,3 +25,19 @@
 #include <WinSock2.h>
 
 extern SOCKET client;
+extern int thisUserId;
+extern struct tabClientStruct parnerTab[];
+extern struct listClientStruct clientWaitList[];
+extern int clientChatID;
+extern HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList;
+extern int waitNumber, chatNumber, listNumber;
+struct tabClientStruct {
+	int tabNumber;       // tab control 
+	HWND hwndDisplay;   // current child dialog box 
+	int chatClientID;
+};
+
+struct listClientStruct {
+	int listNumber;
+	int chatClientID;
+};

@@ -6,4 +6,9 @@
 
 // TODO: reference any additional headers you need in STDAFX.H
 // and not in this file
-extern SOCKET client;
+SOCKET client;
+int thisUserId;
+struct tabClientStruct parnerList[];
+int clientChatID;
+
+HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList;

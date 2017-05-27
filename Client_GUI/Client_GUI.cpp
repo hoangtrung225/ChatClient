@@ -19,18 +19,14 @@
 int windowPotision(HWND hwnd);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 ATOM MyRegisterClass(HINSTANCE hInstance);
+int initWindow(HWND hwnd);
+int resizeWindow(HWND hwnd);
 
-struct tabClient {
-	HWND hwndTab;       // tab control 
-	HWND hwndDisplay;   // current child dialog box 
-	int chatClientID;
 
-};
-
-HWND hTab, hEdit, hList , hButtom;
 RECT rcEdit;
 RECT rcTab;
-RECT rcList;
+RECT rcUserList;
+RECT rcWaitList;
 RECT rcButtom;
 
 
@@ -65,10 +61,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}*/
 	MSG  msg;
 	MyRegisterClass(hInstance);
-	CreateWindowW(L"Chat Client", L"Chat Client",
+	HWND hwnd = CreateWindowW(L"Chat Client", L"Chat Client",
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-		100, 100, 380, 230, 0, 0, hInstance, 0);
-
+		100, 100, 600, 550, 0, 0, hInstance, 0);
+	initWindow(hwnd);
 	while (GetMessage(&msg, NULL, 0, 0)) {
 
 		TranslateMessage(&msg);
@@ -83,7 +79,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
 	WPARAM wParam, LPARAM lParam) {
 	TCITEMW tie;
 	wchar_t text[BUFFSIZE];
-	LRESULT count, id;
+	LRESULT count;
 	INITCOMMONCONTROLSEX icex;
 
 	switch (msg) {
@@ -95,18 +91,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
 		InitCommonControlsEx(&icex);
 
 		windowPotision(hwnd);
-		hList = CreateWindowW(WC_LISTBOXW, NULL, WS_CHILD
-			| WS_VISIBLE | LBS_NOTIFY, rcList.left, rcList.top, rcList.right - rcList.left, rcList.bottom - rcList.top, hwnd,
-			(HMENU)ID_LIST, NULL, NULL);
-		
-		hTab = CreateWindowW(WC_TABCONTROLW, NULL, WS_CHILD | WS_VISIBLE,
-			rcTab.left, rcTab.top, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
 
-		hEdit = CreateWindowW(WC_EDITW, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER,
-			rcEdit.left, rcEdit.top, rcEdit.right - rcEdit.left, rcEdit.bottom - rcEdit.top, hwnd, (HMENU)ID_EDIT, NULL, NULL);
-
-		hButtom = CreateWindowW(WC_BUTTONW, L"OK!", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-			rcButtom.left, rcButtom.top, rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top, hwnd, (HMENU)ID_BUTTOM, NULL, NULL);
 
 		SendMessage(hEdit, EM_SETLIMITTEXT, MAX_TAB_LEN, 0);
 
@@ -140,11 +125,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
 		break;
 	case WM_SIZE:
 		windowPotision(hwnd);
-
+		resizeWindow(hwnd);
+		//set tag potision
+		/*SetWindowPos(hTagTab, 0, rcTab.left, rcTab.top, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, 0);
 		SetWindowPos(hTab, 0, rcTab.left, rcTab.top, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, 0);
 		SetWindowPos(hEdit, 0, rcEdit.left, rcEdit.top, rcEdit.right - rcEdit.left, rcEdit.bottom - rcEdit.top, 0);
-		SetWindowPos(hList, 0, rcList.left, rcList.top, rcList.right - rcList.left, rcList.bottom - rcList.top, 0);
-		SetWindowPos(hButtom, 0, rcButtom.left, rcButtom.top, rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top, 0);
+		SetWindowPos(hUserList, 0, rcUserList.left, rcUserList.top, rcUserList.right - rcUserList.left, rcUserList.bottom - rcUserList.top, 0);
+		SetWindowPos(hButtom, 0, rcButtom.left, rcButtom.top, rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top, 0);*/
 
 	}
 
@@ -159,23 +146,28 @@ int windowPotision(HWND hwnd) {
 	int windowHigh = rcWindow.bottom - rcWindow.top;
 
 	int buttomWidth = windowWidth / 7;
-	rcList.left = MARGIN;
-	rcList.top = MARGIN;
-	rcList.right = windowWidth / 3 - 20;
-	rcList.bottom = windowHigh - 2 * MARGIN;
+	rcUserList.left = MARGIN;
+	rcUserList.top = MARGIN;
+	rcUserList.right = windowWidth / 3 - MARGIN;
+	rcUserList.bottom = windowHigh * 3 / 5;
+
+	rcWaitList.left = MARGIN;
+	rcWaitList.top = windowHigh * 3 / 5 + MARGIN;
+	rcWaitList.right = windowWidth / 3 - MARGIN;
+	rcWaitList.bottom = windowHigh - MARGIN;
 
 	rcTab.left = windowWidth / 3;
 	rcTab.top = MARGIN;
 	rcTab.right = windowWidth - MARGIN;
-	rcTab.bottom = 2 * windowHigh / 3;
+	rcTab.bottom = 4 * windowHigh / 5;
 
 	rcEdit.left = windowWidth / 3;
-	rcEdit.top = 2 * windowHigh / 3 + 20;
+	rcEdit.top = 4 * windowHigh / 5 + 20;
 	rcEdit.right = windowWidth - MARGIN - buttomWidth;
 	rcEdit.bottom = windowHigh - MARGIN;
 
 	rcButtom.left = windowWidth - buttomWidth;
-	rcButtom.top = 2 * windowHigh / 3 + 20;
+	rcButtom.top = 4 * windowHigh / 5 + 20;
 	rcButtom.right = windowWidth - MARGIN;
 	rcButtom.bottom = windowHigh - MARGIN;
 	return 0;
@@ -190,4 +182,84 @@ ATOM MyRegisterClass(HINSTANCE hInstance) {
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
 
 	return RegisterClassW(&wc);
+}
+
+int resizeWindow(HWND hwnd) {
+	int tagWaitListH = 20;
+	int tagWaitListW = rcUserList.right - rcUserList.left;
+	SetWindowPos(hTagUserList, 0, rcUserList.left, rcUserList.top, tagWaitListW, tagWaitListH, 0);
+	SetWindowPos(hUserList, 0, rcUserList.left, rcUserList.top + tagWaitListH, rcUserList.right - rcUserList.left, rcUserList.bottom - rcUserList.top - tagWaitListH, 0);
+	
+	SetWindowPos(hTagWaitList, 0, rcWaitList.left, rcWaitList.top, tagWaitListW, tagWaitListH, 0);
+	SetWindowPos(hWaitList, 0, rcWaitList.left, rcWaitList.top + tagWaitListH, rcWaitList.right - rcWaitList.left, rcWaitList.bottom - rcWaitList.top - tagWaitListH, 0);
+
+	int tagTabH = 20;
+	int tagTabW = rcTab.right - rcTab.left;
+	SetWindowPos(hTagTab, 0, rcTab.left, rcTab.top, tagTabW, tagTabH, 0);
+	SetWindowPos(hTab, 0, rcTab.left, rcTab.top + tagTabH, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH, 0);
+
+	int tagEditH = 20;
+	int tagEditW = rcEdit.right - rcEdit.left;
+	SetWindowPos(hTagEdit, 0, rcEdit.left, rcEdit.top, tagEditW, tagEditH, 0);
+	SetWindowPos(hEdit, 0, rcEdit.left, rcEdit.top + tagEditH, rcEdit.right - rcEdit.left, rcEdit.bottom - rcEdit.top - tagEditH, 0);
+
+	int tagButtomH = 20;
+	int tagButtomW = rcButtom.right - rcButtom.left;
+	//CreateWindowW(L"Static", L"Send", WS_CHILD | WS_VISIBLE | SS_LEFT,
+	//	rcButtom.left, rcButtom.top, tagButtomW, tagButtomH,
+	//	hwnd, (HMENU)0, NULL, NULL);
+	SetWindowPos(hButtom, 0, rcButtom.left, rcButtom.top, rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top, 0);
+
+	return 0;
+}
+
+int initWindow(HWND hwnd) {
+	int tagWaitListH = 20;
+	int tagWaitListW = rcUserList.right - rcUserList.left;
+	hTagUserList = CreateWindowW(L"Static", L"User Online", WS_CHILD | WS_VISIBLE | SS_LEFT,
+		rcUserList.left, rcUserList.top, tagWaitListW, tagWaitListH,
+		hwnd, (HMENU)0, NULL, NULL);
+
+	hUserList = CreateWindowW(WC_LISTBOXW, NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
+		rcUserList.left, rcUserList.top + tagWaitListH, rcUserList.right - rcUserList.left, rcUserList.bottom - rcUserList.top - tagWaitListH,
+		hwnd, (HMENU)ID_LIST, NULL, NULL);
+
+	hTagWaitList = CreateWindowW(L"Static", L"Waiting Response", WS_CHILD | WS_VISIBLE | SS_LEFT,
+		rcWaitList.left, rcWaitList.top, tagWaitListW, tagWaitListH,
+		hwnd, (HMENU)0, NULL, NULL);
+
+	hWaitList = CreateWindowW(WC_LISTBOXW, NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
+		rcWaitList.left, rcWaitList.top + tagWaitListH, rcWaitList.right - rcWaitList.left, rcWaitList.bottom - rcWaitList.top - tagWaitListH,
+		hwnd, (HMENU)ID_LIST, NULL, NULL);
+
+	int tagTabH = 20;
+	int tagTabW = rcTab.right - rcTab.left;
+	hTagTab = CreateWindowW(L"Static", L"Chating parner", WS_CHILD | WS_VISIBLE | SS_LEFT,
+		rcTab.left, rcTab.top, tagTabW, tagTabH,
+		hwnd, (HMENU)0, NULL, NULL);
+
+	hTab = CreateWindowW(WC_TABCONTROLW, NULL, WS_CHILD | WS_VISIBLE,
+		rcTab.left, rcTab.top + tagTabH, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH,
+		hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
+
+	int tagEditH = 20;
+	int tagEditW = rcEdit.right - rcEdit.left;
+	hTagEdit = CreateWindowW(L"Static", L"Enter command", WS_CHILD | WS_VISIBLE | SS_LEFT,
+		rcEdit.left, rcEdit.top, tagEditW, tagEditH,
+		hwnd, (HMENU)0, NULL, NULL);
+
+	hEdit = CreateWindowW(WC_EDITW, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER,
+		rcEdit.left, rcEdit.top + tagEditH, rcEdit.right - rcEdit.left, rcEdit.bottom - rcEdit.top - tagEditH,
+		hwnd, (HMENU)ID_EDIT, NULL, NULL);
+
+	int tagButtomH = 20;
+	int tagButtomW = rcButtom.right - rcButtom.left;
+	//CreateWindowW(L"Static", L"Send", WS_CHILD | WS_VISIBLE | SS_LEFT,
+	//	rcButtom.left, rcButtom.top, tagButtomW, tagButtomH,
+	//	hwnd, (HMENU)0, NULL, NULL);
+
+	hButtom = CreateWindowW(WC_BUTTONW, L"OK!", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		rcButtom.left, rcButtom.top , rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top,
+		hwnd, (HMENU)ID_BUTTOM, NULL, NULL);
+	return 0;
 }
