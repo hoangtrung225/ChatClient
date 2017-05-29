@@ -13,6 +13,8 @@ struct packetUserHeader {
 	int receiverID;
 };
 
+wchar_t displayName[56];
+
 struct userCommand commandSupport[] = {
 	{0, L"LGI", L"LGI [username] [password]: login server with username"},
 	{1, L"LGO", L"LGO: log out"},
@@ -76,11 +78,22 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 			strncpy(headerPacket.CommandName, "IVT", 3);
 			headerPacket.senderID = thisUserId;
 
-			int listCurrentSelected = (int)SendMessageW(hList, LB_GETCURSEL, 0, 0);
+			int listCurrentSelected = (int)SendMessageW(hUserList, LB_GETCURSEL, 0, 0);
 			if (listCurrentSelected == LB_ERR) {
 				MessageBox(NULL, L"Select an user to send chat request", L"Error!", MB_OK);
 			}
-			headerPacket.receiverID = getStructfromList(listCurrentSelected)->chatClientID;
+			struct listClientStruct* selectedStruct = getStructfromList(listCurrentSelected);
+			headerPacket.receiverID = selectedStruct->chatClientID;
+
+			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
+			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
+				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
+				return;
+			}
+			//add user into wait list
+			wprintf_s(displayName, L"%d[invited]", selectedStruct->chatClientID);
+			SendMessageW(hWaitList, LB_ADDSTRING, 0, (LPARAM)displayName);
+			SendMessageW(hUserList, LB_DELETESTRING, listCurrentSelected, 0);
 
 		}
 		default:
