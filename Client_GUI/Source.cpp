@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <Shlwapi.h>
+#include "UserManager.h"
 
 struct userCommand {
 	int CommandCode;
@@ -85,16 +86,20 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 			struct listClientStruct* selectedStruct = getStructfromList(listCurrentSelected);
 			headerPacket.receiverID = selectedStruct->chatClientID;
 
+
 			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
 			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
 				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
 				return;
 			}
+
+			if (addWaiting(selectedStruct->chatClientID) < 0)
+				return;
+
 			//add user into wait list
 			wprintf_s(displayName, L"%d[invited]", selectedStruct->chatClientID);
 			SendMessageW(hWaitList, LB_ADDSTRING, 0, (LPARAM)displayName);
 			SendMessageW(hUserList, LB_DELETESTRING, listCurrentSelected, 0);
-
 		}
 		default:
 			break;

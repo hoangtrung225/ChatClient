@@ -1,8 +1,13 @@
 #include <stdlib.h>
 #include "stdafx.h"
+#include "UserManager.h"
 #define LISTSIZE 256
 int* userOnline, *userWaiting, *userChatting, *listEndPTR;
 void* mutex;
+
+void Unlock();
+void Lock();
+
 void userManagerInit(void) {
 	//when initual there is no user online, waiting or chating
 	userWaiting = userChatting = listEndPTR
