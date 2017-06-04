@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "stdafx.h"
 #include "UserManager.h"
+#include "Client_GUI.h"
 #define LISTSIZE 256
 int* userOnline, *userWaiting, *userChatting, *listEndPTR;
 void* mutex;
@@ -58,6 +59,7 @@ int addUser(int userID) {
 	//increase userChatting PTR
 	userChatting = userChatting + 1;
 	Unlock();
+	return 0;
 }
 
 //return 0 on success found online user and move it to wating  list
@@ -81,6 +83,7 @@ int addWaiting(int idUserOnline) {
 	}
 	return -1;
 }
+
 //add user from waiting to chatting list
 int addChating(int idUserWaiting) {
 	//search userWaiting for match userID
@@ -184,6 +187,17 @@ int removeUser(int usertoRemove) {
 		}
 	//not found user to remove
 	return -1;
+}
+
+//add an chat tab client struct to list partner tab
+int makeChatTabCLient(int clientID, int tabNumber) {
+	for (int i = 0; i < MAX_CHAT_CLIENT; i++) {
+		if (partnerTab[i].chatClientID == -1) {
+			partnerTab[i].chatClientID = clientID;
+			partnerTab[i].tabNumber = tabNumber;
+			partnerTab[i].hwndDisplay = makeNewChatWindow();
+		}
+	}
 }
 
 void Lock()

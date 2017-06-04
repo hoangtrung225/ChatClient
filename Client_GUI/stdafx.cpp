@@ -11,4 +11,4 @@ int thisUserId;
 struct tabClientStruct parnerList[];
 int clientChatID;
 
-HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList;
+HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList, hChatWindow;

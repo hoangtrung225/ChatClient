@@ -3,32 +3,11 @@
 #include <wchar.h>
 #include "stdafx.h"
 #include <WinSock2.h>
+#include "Client_GUI.h"
 
 #pragma comment(lib, "comctl32.lib") 
 
-#define ID_TABCTRL 1
-#define ID_EDIT 2
-#define ID_LIST 3
-#define ID_BUTTOM 4
-#define MAX_TAB_LEN 15
-#define MARGIN 10
-#define BUFFSIZE 512
-#define SERVER_PORT 8080
-#define SERVER_ADDR "127.0.0.1"
-
-int windowPotision(HWND hwnd);
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-ATOM MyRegisterClass(HINSTANCE hInstance);
-int initWindow(HWND hwnd);
-int resizeWindow(HWND hwnd);
-
-
-RECT rcEdit;
-RECT rcTab;
-RECT rcUserList;
-RECT rcWaitList;
-RECT rcButtom;
-
+HWND hwnd;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PWSTR pCmdLine, int nCmdShow) {
@@ -61,7 +40,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}*/
 	MSG  msg;
 	MyRegisterClass(hInstance);
-	HWND hwnd = CreateWindowW(L"Chat Client", L"Chat Client",
+	hwnd = CreateWindowW(L"Chat Client", L"Chat Client",
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 		100, 100, 600, 550, 0, 0, hInstance, 0);
 	initWindow(hwnd);
@@ -262,4 +241,15 @@ int initWindow(HWND hwnd) {
 		rcButtom.left, rcButtom.top , rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top,
 		hwnd, (HMENU)ID_BUTTOM, NULL, NULL);
 	return 0;
+}
+
+HWND makeNewChatWindow(void) {
+	windowPotision(hwnd);
+
+	int tagTabH = 20;
+	int tagTabW = rcTab.right - rcTab.left;
+
+	HWND returnHwnd = CreateWindowW(WC_TABCONTROLW, NULL, WS_CHILD | WS_VISIBLE,
+		rcTab.left, rcTab.top + tagTabH, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH,
+		hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
 }

@@ -77,15 +77,20 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 		case 3:{
 			struct packetUserHeader headerPacket;
 			strncpy(headerPacket.CommandName, "IVT", 3);
+			headerPacket.CommandName[3] = '\0';
+			
 			headerPacket.senderID = thisUserId;
+			if (thisUserId == -1) {
+				MessageBox(NULL, L"Login to send Invite message", L"Error!", MB_OK);
+				return -1;
+			}
 
 			int listCurrentSelected = (int)SendMessageW(hUserList, LB_GETCURSEL, 0, 0);
 			if (listCurrentSelected == LB_ERR) {
 				MessageBox(NULL, L"Select an user to send chat request", L"Error!", MB_OK);
 			}
-			struct listClientStruct* selectedStruct = getStructfromList(listCurrentSelected);
+			struct structClientOnline* selectedStruct = getOnlineStructList(listCurrentSelected);
 			headerPacket.receiverID = selectedStruct->chatClientID;
-
 
 			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
 			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
@@ -101,6 +106,45 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 			SendMessageW(hWaitList, LB_ADDSTRING, 0, (LPARAM)displayName);
 			SendMessageW(hUserList, LB_DELETESTRING, listCurrentSelected, 0);
 		}
+		//send Accept
+		case 4:
+			struct packetUserHeader headerPacket;
+			strncpy(headerPacket.CommandName, "ACP", 3);
+			headerPacket.CommandName[3] = '\0';
+
+			headerPacket.senderID = thisUserId;
+			if (thisUserId == -1) {
+				MessageBox(NULL, L"Login to send Accept message", L"Error!", MB_OK);
+				return -1;
+			}
+
+			int listCurrentSelected = (int)SendMessageW(hWaitList, LB_GETCURSEL, 0, 0);
+			if (listCurrentSelected == LB_ERR) {
+				MessageBox(NULL, L"Select an user to send chat request", L"Error!", MB_OK);
+			}
+			struct structClientWaiting* selectedStruct = getWaitStructList(listCurrentSelected);
+			headerPacket.receiverID = selectedStruct->chatClientID;
+
+			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
+			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
+				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
+				return;
+			}
+
+			if (addChating(selectedStruct->chatClientID) < 0)
+				return;
+
+			//add user to chat tab list, remove from waiting list
+			SendMessageW(hWaitList, LB_DELETESTRING, listCurrentSelected, 0);
+
+			TCITEMW tie;
+			tie.mask = TCIF_TEXT;
+			wprintf_s(displayName, L"%d[partner]", selectedStruct->chatClientID);
+
+			tie.pszText = displayName;
+			int count = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
+			SendMessageW(hTab, TCM_INSERTITEMW, count,
+				(LPARAM)(LPTCITEM)&tie);
 		default:
 			break;
 	}
@@ -114,8 +158,16 @@ int parseCmdtoCode(LPWSTR userCommand) {
 	return -1;
 }
 
-struct listClientStruct *getStructfromList(int listIndex) {
-	for (int i = 0; i < listNumber; i++) {
+struct structClientOnline *getOnlineStructList(int listIndex) {
+	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
+		if (clientOnlineList[i].listNumber == listIndex)
+			return clientOnlineList + i;
+	}
+	return NULL;
+}
+
+struct structClientWaiting *getWaitStructList(int listIndex) {
+	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientWaitList[i].listNumber == listIndex)
 			return clientWaitList + i;
 	}
