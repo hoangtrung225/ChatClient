@@ -135,7 +135,6 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 				return;
 
 			//add user to chat tab list, remove from waiting list
-			SendMessageW(hWaitList, LB_DELETESTRING, listCurrentSelected, 0);
 
 			TCITEMW tie;
 			tie.mask = TCIF_TEXT;
@@ -143,8 +142,12 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 
 			tie.pszText = displayName;
 			int count = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
-			SendMessageW(hTab, TCM_INSERTITEMW, count,
-				(LPARAM)(LPTCITEM)&tie);
+			//fail to make chat tab client struct return
+			if (makeChatTabCLient(selectedStruct->chatClientID, count) < 0)
+				return -1;
+
+			SendMessageW(hWaitList, LB_DELETESTRING, listCurrentSelected, 0);
+			SendMessageW(hTab, TCM_INSERTITEMW, count, (LPARAM)(LPTCITEM)&tie);
 		default:
 			break;
 	}
@@ -158,18 +161,5 @@ int parseCmdtoCode(LPWSTR userCommand) {
 	return -1;
 }
 
-struct structClientOnline *getOnlineStructList(int listIndex) {
-	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
-		if (clientOnlineList[i].listNumber == listIndex)
-			return clientOnlineList + i;
-	}
-	return NULL;
-}
 
-struct structClientWaiting *getWaitStructList(int listIndex) {
-	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
-		if (clientWaitList[i].listNumber == listIndex)
-			return clientWaitList + i;
-	}
-	return NULL;
-}
+

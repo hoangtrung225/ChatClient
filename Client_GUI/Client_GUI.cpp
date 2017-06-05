@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include <WinSock2.h>
 #include "Client_GUI.h"
+#include "helper.h"
 
 #pragma comment(lib, "comctl32.lib") 
 
@@ -11,6 +12,8 @@ HWND hwnd;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PWSTR pCmdLine, int nCmdShow) {
+	
+	programInitValues();
 
 	//create connection
 	WSADATA wsaData;
@@ -45,7 +48,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		100, 100, 600, 550, 0, 0, hInstance, 0);
 	initWindow(hwnd);
 	while (GetMessage(&msg, NULL, 0, 0)) {
-
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -54,12 +56,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
-	WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	TCITEMW tie;
 	wchar_t text[BUFFSIZE];
 	LRESULT count;
 	INITCOMMONCONTROLSEX icex;
+	LPNMHDR	tc = (LPNMHDR)lParam;
 
 	switch (msg) {
 
@@ -89,15 +91,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,
 				tie.mask = TCIF_TEXT;
 				tie.pszText = text;
 				count = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
-				SendMessageW(hTab, TCM_INSERTITEMW, count,
-					(LPARAM)(LPTCITEM)&tie);
+				SendMessageW(hTab, TCM_INSERTITEMW, count, (LPARAM)(LPTCITEM)&tie);
 			}
 			break;
-
-		
 		}
 		break;
-
+	case WM_NOTIFY:
+		//Is event for tab change
+		switch (tc->code)
+		{
+		case TCN_SELCHANGE:
+			if (tc->idFrom == ID_TABCTRL) {
+				int currentTabID = SendMessageW(hTab, TCM_GETCURSEL, 0, 0);
+				struct tabClientStruct* tabStruct = getTabStruct(currentTabID);
+				if (hCurrentWindow == NULL)
+					break;
+				if (hCurrentWindow != tabStruct->hwndDisplay) {
+					//hide current window save selected window as current and show
+					ShowWindow(hCurrentWindow, SW_HIDE);
+					hCurrentWindow = tabStruct->hwndDisplay;
+					ShowWindow(hCurrentWindow, SW_SHOW);
+					break;
+				}
+			}
+			break;
+		default:
+			break;
+		}
 	case WM_DESTROY:
 
 		PostQuitMessage(0);
@@ -248,8 +268,12 @@ HWND makeNewChatWindow(void) {
 
 	int tagTabH = 20;
 	int tagTabW = rcTab.right - rcTab.left;
-
-	HWND returnHwnd = CreateWindowW(WC_TABCONTROLW, NULL, WS_CHILD | WS_VISIBLE,
-		rcTab.left, rcTab.top + tagTabH, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH,
+	
+	int tabMargin = 30;
+	HWND returnHwnd = CreateWindowW(WC_TABCONTROLW, NULL, WS_VSCROLL | WS_BORDER | WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY,
+		rcTab.left, rcTab.top + tagTabH + tabMargin, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH,
 		hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
+	if (hCurrentWindow == NULL)
+		hCurrentWindow = returnHwnd;
+	return returnHwnd;
 }

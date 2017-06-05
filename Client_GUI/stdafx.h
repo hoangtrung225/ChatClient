@@ -35,7 +35,7 @@ extern struct structClientWaiting clientWaitList[MAX_LIST_CLIENT];
 extern struct structClientOnline clientOnlineList[MAX_LIST_CLIENT];
 
 extern int clientChatID;
-extern HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList, hChatWindow;
+extern HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList, hChatWindow, hCurrentWindow;
 extern int waitNumber, chatNumber, listNumber;
 struct tabClientStruct {
 	int tabNumber;       // tab control 
@@ -51,8 +51,8 @@ struct structClientOnline {
 struct structClientWaiting {
 	int listNumber;
 	int chatClientID;
-	char state;
+	int state;
 };
 
-#define STATE_WAIT_RESPONSE 'r'
-#define STATE_WAIT_RECEIVE 'c'
+#define STATE_WAIT_RESPONSE 0
+#define STATE_WAIT_RECEIVE 1

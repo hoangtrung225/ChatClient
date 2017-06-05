@@ -196,8 +196,12 @@ int makeChatTabCLient(int clientID, int tabNumber) {
 			partnerTab[i].chatClientID = clientID;
 			partnerTab[i].tabNumber = tabNumber;
 			partnerTab[i].hwndDisplay = makeNewChatWindow();
+
+			return 0;
 		}
 	}
+	MessageBox(NULL, L"Error: too many tab opened !", L"Error!", MB_OK);
+	return -1;
 }
 
 void Lock()
