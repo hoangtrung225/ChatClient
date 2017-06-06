@@ -54,5 +54,5 @@ struct structClientWaiting {
 	int state;
 };
 
-#define STATE_WAIT_RESPONSE 0
-#define STATE_WAIT_RECEIVE 1
+#define STATE_WAIT_USER 0
+#define STATE_WAIT_MESSAGE 1

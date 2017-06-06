@@ -5,4 +5,4 @@ int addChating(int idUserWaiting);
 int endConversation(int idUserChatting);
 int refuseRequest(int waitingRequest);
 int removeUser(int usertoRemove);
-int makeChatTabCLient(int clientID, int tabNumber);
+int makeChatTabStruct(int clientID, int tabNumber);

@@ -6,6 +6,7 @@
 #define ID_BUTTOM 4
 #define MAX_TAB_LEN 15
 #define MARGIN 10
+#define TABMARGIN 40
 #define TABMARGIN 40 
 #define BUFFSIZE 512
 #define SERVER_PORT 8080

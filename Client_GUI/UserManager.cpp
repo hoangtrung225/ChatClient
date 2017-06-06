@@ -189,21 +189,6 @@ int removeUser(int usertoRemove) {
 	return -1;
 }
 
-//add an chat tab client struct to list partner tab
-int makeChatTabCLient(int clientID, int tabNumber) {
-	for (int i = 0; i < MAX_CHAT_CLIENT; i++) {
-		if (partnerTab[i].chatClientID == -1) {
-			partnerTab[i].chatClientID = clientID;
-			partnerTab[i].tabNumber = tabNumber;
-			partnerTab[i].hwndDisplay = makeNewChatWindow();
-
-			return 0;
-		}
-	}
-	MessageBox(NULL, L"Error: too many tab opened !", L"Error!", MB_OK);
-	return -1;
-}
-
 void Lock()
 {
 	if (mutex != NULL)

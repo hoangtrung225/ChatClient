@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <Shlwapi.h>
 #include "UserManager.h"
+#include "helper.h"
 
 struct userCommand {
 	int CommandCode;
@@ -143,7 +144,7 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 			tie.pszText = displayName;
 			int count = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
 			//fail to make chat tab client struct return
-			if (makeChatTabCLient(selectedStruct->chatClientID, count) < 0)
+			if (makeChatTabStruct(selectedStruct->chatClientID, count) < 0)
 				return -1;
 
 			SendMessageW(hWaitList, LB_DELETESTRING, listCurrentSelected, 0);
