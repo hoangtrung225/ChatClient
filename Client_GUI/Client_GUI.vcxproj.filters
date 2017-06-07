@@ -33,7 +33,7 @@
     <ClInclude Include="UserManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helper.h">
+    <ClInclude Include="StructControler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,10 +47,10 @@
     <ClCompile Include="UserManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helper.cpp">
+    <ClCompile Include="StructControler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="control.cpp">
+    <ClCompile Include="CommandControler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

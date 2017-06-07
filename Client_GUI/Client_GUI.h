@@ -23,3 +23,4 @@ RECT rcTab;
 RECT rcUserList;
 RECT rcWaitList;
 RECT rcButtom;
+RECT rcChatWindow

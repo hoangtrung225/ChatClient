@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include <WinSock2.h>
 #include "Client_GUI.h"
-#include "helper.h"
+#include "StructControler.h"
 
 #pragma comment(lib, "comctl32.lib") 
 
@@ -111,9 +111,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 					ShowWindow(hCurrentWindow, SW_HIDE);
 					hCurrentWindow = tabStruct->hwndDisplay;
 					//resize chat window
-					int tagTabH = 20;
-					int tagTabW = rcTab.right - rcTab.left;
-					SetWindowPos(hCurrentWindow, 0, rcTab.left, rcTab.top + tagTabH + TABMARGIN, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH);
+
+					TabCtrl_AdjustRect(hTab, FALSE, &rcChatWindow);
+					SetWindowPos(hCurrentWindow, 0, rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, 0);
 					ShowWindow(hCurrentWindow, SW_SHOW);
 					break;
 				}
@@ -172,6 +172,8 @@ int windowPotision(HWND hwnd) {
 	rcButtom.top = 4 * windowHigh / 5 + 20;
 	rcButtom.right = windowWidth - MARGIN;
 	rcButtom.bottom = windowHigh - MARGIN;
+
+	TabCtrl_AdjustRect(hTab, FALSE, &rcChatWindow);
 	return 0;
 }
 
@@ -212,7 +214,7 @@ int resizeWindow(HWND hwnd) {
 	//	hwnd, (HMENU)0, NULL, NULL);
 	SetWindowPos(hButtom, 0, rcButtom.left, rcButtom.top, rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top, 0);
 
-	SetWindowPos(hCurrentWindow, 0, rcTab.left, rcTab.top + tagTabH + TABMARGIN, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH);
+	SetWindowPos(hCurrentWindow, 0, rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, 0);
 
 	return 0;
 }
@@ -274,9 +276,10 @@ HWND makeNewChatWindow(void) {
 	int tagTabH = 20;
 	int tagTabW = rcTab.right - rcTab.left;
 	
+	TabCtrl_AdjustRect(hTab, FALSE, &rcChatWindow);
+
 	HWND returnHwnd = CreateWindowW(WC_TABCONTROLW, NULL, WS_VSCROLL | WS_BORDER | WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY,
-		rcTab.left, rcTab.top + tagTabH + TABMARGIN, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH,
-		hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
+		rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
 	if (hCurrentWindow == NULL)
 		hCurrentWindow = returnHwnd;
 	return returnHwnd;

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <Shlwapi.h>
 #include "UserManager.h"
-#include "helper.h"
+#include "StructControler.h"
 
 struct userCommand {
 	int CommandCode;

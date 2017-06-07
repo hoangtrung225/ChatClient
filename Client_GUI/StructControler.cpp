@@ -101,11 +101,11 @@ int removeWaitListStruct(int clientID) {
 int makeOnlineListStruct(int clientID) {
 	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientOnlineList[i].chatClientID == -1) {
-
 			clientOnlineList[i].chatClientID = clientID;
 			clientOnlineList[i].listNumber = SendMessageW(hUserList, TCM_GETITEMCOUNT, 0, 0);
 			wprintf_s(textLabel, L"%d[Online]", clientID);
 			SendMessageW(hUserList, LB_INSERTSTRING, clientWaitList[i].listNumber, (LPARAM)textLabel);
+
 			return 0;
 		}
 	}
