@@ -2,31 +2,8 @@
 #include <Shlwapi.h>
 #include "UserManager.h"
 #include "StructControler.h"
+#include "CommandControler.h"
 
-struct userCommand {
-	int CommandCode;
-	wchar_t CommandName[4];
-	wchar_t HelpMessage[64];
-};
-
-struct packetUserHeader {
-	char CommandName[4]; //3 character command name end with '\0'
-	int senderID;
-	int receiverID;
-};
-
-wchar_t displayName[56];
-
-struct userCommand commandSupport[] = {
-	{0, L"LGI", L"LGI [username] [password]: login server with username"},
-	{1, L"LGO", L"LGO: log out"},
-	{2, L"UDT", L"UDT: get update from server"},
-	{3, L"IVT", L"IVT [username]: invite user to conversation"},
-	{4, L"ACP", L"ACP [username]: accept invitation from user"},
-	{5, L"DNY", L"DNY [username]: deny invitation from user"},
-	{6, L"MSG", L"MSG [username] [message]:send message to user"},
-	{7, L"RGT", L"RGT [username] [password]: register username with server"}
-};
 int processUserInput(HWND hwnd, LPWSTR userInput) {
 	if (userInput[0] == L':')
 		doCommand(hwnd, userInput + 1);
@@ -34,8 +11,6 @@ int processUserInput(HWND hwnd, LPWSTR userInput) {
 		sendChatMessage(userInput);
 }
 
-char sendSocketBuffer[512];
-char recvSocketBuffer[512];
 int doCommand(HWND hwnd, LPWSTR userCommand) {
 	switch (parseCmdtoCode(userCommand))
 	{
@@ -88,10 +63,15 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 
 			int listCurrentSelected = (int)SendMessageW(hUserList, LB_GETCURSEL, 0, 0);
 			if (listCurrentSelected == LB_ERR) {
-				MessageBox(NULL, L"Select an user to send chat request", L"Error!", MB_OK);
+				MessageBox(NULL, L"Select an user to send Chat request", L"Error!", MB_OK);
+				return -1;
 			}
 			struct structClientOnline* selectedStruct = getOnlineStructList(listCurrentSelected);
 			headerPacket.receiverID = selectedStruct->chatClientID;
+
+			//check if user is in online list
+			if (addWaiting(selectedStruct->chatClientID) < 0)
+				return -1;
 
 			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
 			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
@@ -99,16 +79,16 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 				return;
 			}
 
-			if (addWaiting(selectedStruct->chatClientID) < 0)
-				return;
-
 			//add user into wait list
-			wprintf_s(displayName, L"%d[invited]", selectedStruct->chatClientID);
-			SendMessageW(hWaitList, LB_ADDSTRING, 0, (LPARAM)displayName);
-			SendMessageW(hUserList, LB_DELETESTRING, listCurrentSelected, 0);
-		}
+			if (makeWaitListStruct(selectedStruct->chatClientID, STATE_WAIT_MESSAGE) < 0)
+				return -1;
+
+			removeOnlineListStruct(selectedStruct->chatClientID);
+			}
+			break;
+
 		//send Accept
-		case 4:
+		case 4: {
 			struct packetUserHeader headerPacket;
 			strncpy(headerPacket.CommandName, "ACP", 3);
 			headerPacket.CommandName[3] = '\0';
@@ -121,34 +101,95 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 
 			int listCurrentSelected = (int)SendMessageW(hWaitList, LB_GETCURSEL, 0, 0);
 			if (listCurrentSelected == LB_ERR) {
-				MessageBox(NULL, L"Select an user to send chat request", L"Error!", MB_OK);
+				MessageBox(NULL, L"Select an user to send Accept message", L"Error!", MB_OK);
+				return -1;
 			}
 			struct structClientWaiting* selectedStruct = getWaitStructList(listCurrentSelected);
 			headerPacket.receiverID = selectedStruct->chatClientID;
 
+			//send accept if user is waiting respond else return error
+			if (selectedStruct->state != STATE_WAIT_USER) {
+				MessageBox(NULL, L"Error: user accept have to in waiting queue", L"Error!", MB_OK);
+				return -1;
+			}
+
+			//check if user is in waiting list
+			if (addChating(selectedStruct->chatClientID) < 0)
+				return -1;
+
 			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
 			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
 				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
-				return;
+				return -1;
 			}
 
-			if (addChating(selectedStruct->chatClientID) < 0)
-				return;
-
 			//add user to chat tab list, remove from waiting list
+			if (makeChatTabStruct(selectedStruct->chatClientID) < 0)
+				return -1;
+			removeWaitListStruct(selectedStruct->chatClientID);
+			}
+			break;
 
-			TCITEMW tie;
-			tie.mask = TCIF_TEXT;
-			wprintf_s(displayName, L"%d[partner]", selectedStruct->chatClientID);
+		//send DENY message
+		case 5: {
+			struct packetUserHeader headerPacket;
+			strncpy(headerPacket.CommandName, "DNY", 3);
+			headerPacket.CommandName[3] = '\0';
 
-			tie.pszText = displayName;
-			int count = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
-			//fail to make chat tab client struct return
-			if (makeChatTabStruct(selectedStruct->chatClientID, count) < 0)
+			headerPacket.senderID = thisUserId;
+			if (thisUserId == -1) {
+				MessageBox(NULL, L"Login to send Deny message", L"Error!", MB_OK);
+				return -1;
+			}
+
+			int listCurrentSelected = (int)SendMessageW(hWaitList, LB_GETCURSEL, 0, 0);
+			if (listCurrentSelected == LB_ERR) {
+				MessageBox(NULL, L"Select an user to send Deny message", L"Error!", MB_OK);
+				return -1;
+			}
+			struct structClientWaiting* selectedStruct = getWaitStructList(listCurrentSelected);
+			headerPacket.receiverID = selectedStruct->chatClientID;
+
+			//send accept if user is waiting respond else return error
+			if (selectedStruct->state != STATE_WAIT_USER) {
+				MessageBox(NULL, L"Error: user deny have to in waiting queue", L"Error!", MB_OK);
+				return -1;
+			}
+
+			//check if user is in waiting list
+			if (refuseRequest(selectedStruct->chatClientID) < 0)
 				return -1;
 
-			SendMessageW(hWaitList, LB_DELETESTRING, listCurrentSelected, 0);
-			SendMessageW(hTab, TCM_INSERTITEMW, count, (LPARAM)(LPTCITEM)&tie);
+			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
+			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
+				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
+				return -1;
+			}
+
+			//remove from waiting list, push back into online list
+			if (removeWaitListStruct(selectedStruct->chatClientID) < 0)
+				return -1;
+			makeOnlineListStruct(selectedStruct->chatClientID);
+		}
+			break;
+		case 6: 
+			sendChatMessage(userCommand + 1 + 4);
+			break;
+		case 7: {
+			strncpy(sendSocketBuffer, "RGT", 3);
+			sendSocketBuffer[3] = '\0';
+			//get username length
+			int usernameLen = wcslen(userCommand + 4);
+			wcstombs(sendSocketBuffer + 4, userCommand + 4, usernameLen);
+			sendSocketBuffer[4 + usernameLen] = '\0';
+
+			//get user password
+			int passwordLen = wcslen(userCommand + 4 + usernameLen + 1);
+			wcstombs(sendSocketBuffer + 4 + usernameLen + 1, userCommand + 4 + usernameLen + 1, passwordLen);
+			sendSocketBuffer[4 + usernameLen + 1 + passwordLen] = '\0';
+
+			send(client, sendSocketBuffer, 4 + usernameLen + 1 + passwordLen + 1, 0);
+		}
 		default:
 			break;
 	}
@@ -162,5 +203,34 @@ int parseCmdtoCode(LPWSTR userCommand) {
 	return -1;
 }
 
+int sendChatMessage(LPWSTR userInput) {
+	struct packetUserHeader headerPacket;
+	strncpy(headerPacket.CommandName, "MSG", 3);
+	headerPacket.CommandName[3] = '\0';
 
+	headerPacket.senderID = thisUserId;
+	if (thisUserId == -1) {
+		MessageBox(NULL, L"Login to send Chat message", L"Error!", MB_OK);
+		return -1;
+	}
 
+	int tabCurrentSelected = (int)SendMessageW(hTab, TCM_GETCURSEL, 0, 0);
+	if (tabCurrentSelected == LB_ERR) {
+		MessageBox(NULL, L"Select an user to send Chat message", L"Error!", MB_OK);
+		return -1;
+	}
+	struct tabClientStruct* selectedStruct = getTabStruct(tabCurrentSelected);
+	headerPacket.receiverID = selectedStruct->chatClientID;
+
+	//copy send header and message to buffer
+	memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
+	int messageLen = wcslen(userInput);
+	wcstombs(sendSocketBuffer + sizeof headerPacket, userInput, messageLen);
+	if (send(client, sendSocketBuffer, sizeof headerPacket + messageLen, 0) < 0) {
+		MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
+		return -1;
+	}
+
+	//add message to Chat window 
+
+}

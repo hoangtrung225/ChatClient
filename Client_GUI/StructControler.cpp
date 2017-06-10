@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "UserManager.h"
 #include "Client_GUI.h"
+
+wchar_t textLabel[64];
+
 struct structClientOnline *getOnlineStructList(int listIndex) {
 	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientOnlineList[i].listNumber == listIndex)
@@ -33,11 +36,19 @@ int programInitValues(void) {
 }
 
 //add an chat tab client struct to list partner tab
-int makeChatTabStruct(int clientID, int tabNumber) {
+int makeChatTabStruct(int clientID) {
 	for (int i = 0; i < MAX_CHAT_CLIENT; i++) {
 		if (partnerTab[i].chatClientID == -1) {
 			partnerTab[i].chatClientID = clientID;
-			partnerTab[i].tabNumber = tabNumber;
+			partnerTab[i].tabNumber = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
+
+			TCITEMW tie;
+			tie.mask = TCIF_TEXT;
+			wprintf_s(textLabel, L"%d[partner]", clientID);
+			tie.pszText = textLabel;
+
+			SendMessageW(hTab, TCM_INSERTITEMW, partnerTab[i].tabNumber, (LPARAM)(LPTCITEM)&tie);
+
 			partnerTab[i].hwndDisplay = makeNewChatWindow();
 
 			return 0;
@@ -51,17 +62,22 @@ int removeChatTabStruct(int clientID) {
 	for (int i = 0; i < MAX_CHAT_CLIENT; i++) {
 		if (partnerTab[i].chatClientID == clientID) {
 			partnerTab[i].chatClientID = -1;
+			//delete tab item of struct offset other tab struct 
+			for (int j = 0; j < MAX_CHAT_CLIENT; j++)
+				if (partnerTab[j].tabNumber > partnerTab[i].tabNumber)
+					partnerTab[j].tabNumber--;
+			SendMessageW(hTab, TCM_DELETEITEM, partnerTab[i].tabNumber, 0);
 			partnerTab[i].tabNumber = -1;
 			DestroyWindow(partnerTab[i].hwndDisplay);
-			partnerTab[i].hwndDisplay = -1;
+			partnerTab[i].hwndDisplay = NULL;
 
 			return 0;
 		}
 	}
-	MessageBox(NULL, L"Error: cannot remove tab structs!", L"Error!", MB_OK);
+	MessageBox(NULL, L"Error: tab structs item not found!", L"Error!", MB_OK);
 	return -1;
 }
-wchar_t textLabel[64];
+
 int makeWaitListStruct(int clientID, int state) {
 	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientWaitList[i].chatClientID == -1) {
@@ -88,13 +104,17 @@ int removeWaitListStruct(int clientID) {
 		if (clientWaitList[i].chatClientID == clientID) {
 			clientWaitList[i].chatClientID = -1;
 			clientWaitList[i].state = -1;
+			//delete wait list item and offset other wait list struct
+			for (int j = 0; j < MAX_LIST_CLIENT; j++)
+				if (clientWaitList[i].listNumber < clientWaitList[j].listNumber)
+					clientWaitList[j].listNumber--;
 			SendMessageW(hWaitList, LB_DELETESTRING, clientWaitList[i].listNumber, 0);
 			clientWaitList[i].listNumber = -1;
 
 			return 0;
 		}
 	}
-	MessageBox(NULL, L"Error: cannot remove tab structs!", L"Error!", MB_OK);
+	MessageBox(NULL, L"Error: wait list item not found!", L"Error!", MB_OK);
 	return -1;
 }
 
@@ -117,12 +137,16 @@ int removeOnlineListStruct(int clientID) {
 	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientOnlineList[i].chatClientID == clientID) {
 			clientOnlineList[i].chatClientID = -1;
+			//delete wait list item and offset other wait list struct
+			for (int j = 0; j < MAX_LIST_CLIENT; j++)
+				if (clientOnlineList[i].listNumber < clientOnlineList[j].listNumber)
+					clientOnlineList[j].listNumber--;
 			SendMessageW(hUserList, LB_DELETESTRING, clientOnlineList[i].listNumber, 0);
 			clientOnlineList[i].listNumber = -1;
 
 			return 0;
 		}
 	}
-	MessageBox(NULL, L"Error: cannot remove tab structs!", L"Error!", MB_OK);
+	MessageBox(NULL, L"Error: online list item not found!", L"Error!", MB_OK);
 	return -1;
 }

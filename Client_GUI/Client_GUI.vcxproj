@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client_GUI.h" />
+    <ClInclude Include="CommandControler.h" />
     <ClInclude Include="StructControler.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />

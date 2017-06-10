@@ -56,3 +56,6 @@ struct structClientWaiting {
 
 #define STATE_WAIT_USER 0
 #define STATE_WAIT_MESSAGE 1
+
+char sendSocketBuffer[512];
+char Buffer[512];
