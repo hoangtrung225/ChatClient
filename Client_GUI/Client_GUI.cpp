@@ -8,6 +8,8 @@
 
 #pragma comment(lib, "comctl32.lib") 
 
+#define WM_SOCKET WM_USER + 1
+
 HWND hwnd;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -36,16 +38,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	serverAddr.sin_port = htons(SERVER_PORT);
 	serverAddr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
 
-	//Request to connect server
-	/*if (connect(client, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
-		MessageBox(NULL, L"Cannot connect to server!", L"Error!", MB_OK);
-		return 0;
-	}*/
 	MSG  msg;
 	MyRegisterClass(hInstance);
 	hwnd = CreateWindowW(L"Chat Client", L"Chat Client",
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 		100, 100, 600, 550, 0, 0, hInstance, 0);
+
+	//request window message for hwnd
+	WSAAsyncSelect(client, hwnd, WM_SOCKET, FD_ACCEPT | FD_CLOSE | FD_READ);
+
+	//Request to connect server
+	/*if (connect(client, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
+	MessageBox(NULL, L"Cannot connect to server!", L"Error!", MB_OK);
+	return 0;
+	}*/
+
 	initWindow(hwnd);
 	while (GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
@@ -278,7 +285,7 @@ HWND makeNewChatWindow(void) {
 	
 	TabCtrl_AdjustRect(hTab, FALSE, &rcChatWindow);
 
-	HWND returnHwnd = CreateWindowW(WC_TABCONTROLW, NULL, WS_VSCROLL | WS_BORDER | WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY,
+	HWND returnHwnd = CreateWindowW(WC_EDITW, NULL, WS_VSCROLL | WS_BORDER | WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY,
 		rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
 	if (hCurrentWindow == NULL)
 		hCurrentWindow = returnHwnd;

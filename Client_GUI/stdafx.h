@@ -18,8 +18,9 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
-#include <tchar.h>
+#include <wchar.h>
 #include <commctrl.h>
+#include <stdio.h> 
 
 // TODO: reference additional headers your program requires here
 #include <WinSock2.h>
@@ -37,6 +38,7 @@ extern struct structClientOnline clientOnlineList[MAX_LIST_CLIENT];
 extern int clientChatID;
 extern HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList, hChatWindow, hCurrentWindow;
 extern int waitNumber, chatNumber, listNumber;
+
 struct tabClientStruct {
 	int tabNumber;       // tab control 
 	HWND hwndDisplay;   // current child dialog box 
@@ -58,4 +60,4 @@ struct structClientWaiting {
 #define STATE_WAIT_MESSAGE 1
 
 char sendSocketBuffer[512];
-char Buffer[512];
+wchar_t chatBuffer[512];

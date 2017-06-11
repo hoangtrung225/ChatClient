@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "UserManager.h"
 #include "Client_GUI.h"
+#include "StructControler.h"
 
 wchar_t textLabel[64];
 
@@ -21,7 +22,7 @@ struct structClientWaiting *getWaitStructList(int listIndex) {
 }
 
 struct tabClientStruct* getTabStruct(int tabIndex) {
-	for (int i = 0; i < MAX_CHAT_CLIENT, i++) {
+	for (int i = 0; i < MAX_CHAT_CLIENT; i++) {
 		if (partnerTab[i].tabNumber == tabIndex)
 			return partnerTab + i;
 	}
@@ -33,6 +34,7 @@ int programInitValues(void) {
 	memset(partnerTab, -1, sizeof partnerTab);
 	memset(clientWaitList, -1, sizeof clientWaitList);
 	memset(clientOnlineList, -1, sizeof clientOnlineList);
+	return 0;
 }
 
 //add an chat tab client struct to list partner tab

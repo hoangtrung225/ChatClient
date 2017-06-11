@@ -3,6 +3,9 @@
 #include "UserManager.h"
 #include "StructControler.h"
 #include "CommandControler.h"
+#include "wchar.h"
+
+#define _CRT_SECURE_NO_WARNINGS
 
 int processUserInput(HWND hwnd, LPWSTR userInput) {
 	if (userInput[0] == L':')
@@ -232,5 +235,10 @@ int sendChatMessage(LPWSTR userInput) {
 	}
 
 	//add message to Chat window 
+	wprintf_s(chatBuffer, L"Me: %s", userInput);
 
+	int index = GetWindowTextLength(hEdit);
+	SetFocus(hEdit); // set focus
+	SendMessage(hEdit, EM_SETSEL, (WPARAM)index, (LPARAM)index); // set selection - end of text
+	SendMessage(hEdit, EM_REPLACESEL, 0, (LPARAM)chatBuffer); // append!
 }

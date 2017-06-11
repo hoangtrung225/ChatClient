@@ -2,7 +2,9 @@
 #include "stdafx.h"
 #include "UserManager.h"
 #include "Client_GUI.h"
+
 #define LISTSIZE 256
+
 int* userOnline, *userWaiting, *userChatting, *listEndPTR;
 void* mutex;
 
