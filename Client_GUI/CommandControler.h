@@ -1,3 +1,4 @@
+#pragma once
 struct userCommand {
 	int CommandCode;
 	wchar_t CommandName[4];

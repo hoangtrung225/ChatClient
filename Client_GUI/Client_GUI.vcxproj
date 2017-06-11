@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="Client_GUI.h" />
     <ClInclude Include="CommandControler.h" />
+    <ClInclude Include="MessageProcess.h" />
     <ClInclude Include="StructControler.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -155,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client_GUI.cpp" />
+    <ClCompile Include="MessageProcess.cpp" />
     <ClCompile Include="StructControler.cpp" />
     <ClCompile Include="CommandControler.cpp" />
     <ClCompile Include="stdafx.cpp">

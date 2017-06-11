@@ -152,6 +152,7 @@ int refuseRequest(int waitingRequest) {
 }
 
 int removeUser(int usertoRemove) {
+	int ret = -1;
 	for (int* tmpPtr = userOnline; tmpPtr < listEndPTR; tmpPtr++)
 		//found user to remove
 		if (tmpPtr[0] == usertoRemove) {
@@ -167,6 +168,9 @@ int removeUser(int usertoRemove) {
 
 				listEndPTR = listEndPTR - 1;
 				listEndPTR[0] = -1;
+
+				ret = STATE_USER_ONLINE;
+				break;
 			}
 			else if (userWaiting < tmpPtr && tmpPtr < userChatting) {
 				addChating(usertoRemove);
@@ -176,18 +180,34 @@ int removeUser(int usertoRemove) {
 
 				listEndPTR = listEndPTR - 1;
 				listEndPTR[0] = -1;
+
+				ret = STATE_USER_WAITING;
+				break;
 			}
 			else if (userChatting < tmpPtr && tmpPtr < listEndPTR) {
 				tmpPtr[0] = listEndPTR[-1];
 				listEndPTR = listEndPTR - 1;
 				listEndPTR[0] = -1;
-			}
-			else
-				return -1;
 
-			Unlock();
+				ret = STATE_USER_CHATING;
+				break;
+			}
 		}
+	Unlock();
 	//not found user to remove
+	return ret;
+}
+
+int getUserStatus(int userID) {
+	for (int* tmpPtr = userOnline; tmpPtr < listEndPTR; tmpPtr++) 
+		if (tmpPtr[0] == userID) {
+			if (tmpPtr < userWaiting)
+				return STATE_USER_ONLINE;
+			else if (userWaiting < tmpPtr && tmpPtr < userChatting)
+				return STATE_USER_WAITING;
+			else if (userChatting < tmpPtr && tmpPtr < listEndPTR)
+				return STATE_USER_CHATING;
+		}
 	return -1;
 }
 

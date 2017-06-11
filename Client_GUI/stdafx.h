@@ -27,6 +27,7 @@
 
 #define MAX_CHAT_CLIENT 20
 #define MAX_LIST_CLIENT 100
+#define BUFFSIZE 512
 
 extern SOCKET client;
 extern int thisUserId;
@@ -59,5 +60,7 @@ struct structClientWaiting {
 #define STATE_WAIT_USER 0
 #define STATE_WAIT_MESSAGE 1
 
-char sendSocketBuffer[512];
-wchar_t chatBuffer[512];
+char recvSocketBuffer[BUFFSIZE];
+char sendSocketBuffer[BUFFSIZE];
+
+wchar_t chatBuffer[BUFFSIZE];

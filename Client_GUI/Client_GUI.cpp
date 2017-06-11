@@ -45,7 +45,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		100, 100, 600, 550, 0, 0, hInstance, 0);
 
 	//request window message for hwnd
-	WSAAsyncSelect(client, hwnd, WM_SOCKET, FD_ACCEPT | FD_CLOSE | FD_READ);
+	WSAAsyncSelect(client, hwnd, WM_SOCKET, FD_CLOSE | FD_READ);
 
 	//Request to connect server
 	/*if (connect(client, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
@@ -103,6 +103,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			break;
 		}
 		break;
+	case WM_SOCKET:
+		switch (WSAGETSELECTEVENT(lParam))
+		{
+		case FD_READ:
+			int ret = recv(client, recvSocketBuffer, BUFFSIZE, 0);
+			if (ret > 0) {
+				recvSocketBuffer[ret] = '\0';
+				processIncomingMessage(recvSocketBuffer);
+			}
+		default:
+			break;
+		}
 	case WM_NOTIFY:
 		//Is event for tab change
 		switch (tc->code)

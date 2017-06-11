@@ -8,7 +8,6 @@
 #define MARGIN 10
 #define TABMARGIN 40
 #define TABMARGIN 40 
-#define BUFFSIZE 512
 #define SERVER_PORT 8080
 #define SERVER_ADDR "127.0.0.1"
 

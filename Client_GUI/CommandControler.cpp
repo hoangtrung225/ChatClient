@@ -12,6 +12,7 @@ int processUserInput(HWND hwnd, LPWSTR userInput) {
 		doCommand(hwnd, userInput + 1);
 	else
 		sendChatMessage(userInput);
+	return 0;
 }
 
 int doCommand(HWND hwnd, LPWSTR userCommand) {
@@ -79,7 +80,7 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
 			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
 				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
-				return;
+				return -1;
 			}
 
 			//add user into wait list
@@ -196,6 +197,7 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 		default:
 			break;
 	}
+	return 0;
 }
 
 int parseCmdtoCode(LPWSTR userCommand) {
