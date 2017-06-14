@@ -5,6 +5,27 @@
 #include <WinSock2.h>
 #include "Client_GUI.h"
 #include "StructControler.h"
+#include "MessageProcess.h"
+#include "CommandControler.h"
+#include "UserManager.h"
+
+char recvSocketBuffer[BUFFSIZE];
+char sendSocketBuffer[BUFFSIZE];
+wchar_t chatBuffer[BUFFSIZE];
+
+RECT rcEdit;
+RECT rcTab;
+RECT rcUserList;
+RECT rcWaitList;
+RECT rcButtom;
+RECT rcChatWindow;
+
+
+struct tabClientStruct partnerTab[MAX_CHAT_CLIENT];
+struct structClientWaiting clientWaitList[MAX_LIST_CLIENT];
+struct structClientOnline clientOnlineList[MAX_LIST_CLIENT];
+
+HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList, hChatWindow, hCurrentWindow;
 
 #pragma comment(lib, "comctl32.lib") 
 
@@ -14,8 +35,10 @@ HWND hwnd;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PWSTR pCmdLine, int nCmdShow) {
-	
+
+
 	programInitValues();
+	userManagerInit();
 
 	//create connection
 	WSADATA wsaData;
@@ -54,6 +77,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}*/
 
 	initWindow(hwnd);
+
 	while (GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -64,11 +88,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	TCITEMW tie;
 	wchar_t text[BUFFSIZE];
-	LRESULT count;
 	INITCOMMONCONTROLSEX icex;
 	LPNMHDR	tc = (LPNMHDR)lParam;
+	int ret = 0;
 
 	switch (msg) {
 
@@ -80,6 +103,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		windowPotision(hwnd);
 
+		for (int i = 0; i < 5; i++) {
+			addUser(i);
+			makeOnlineListStruct(i);
+		}
 
 		SendMessage(hEdit, EM_SETLIMITTEXT, MAX_TAB_LEN, 0);
 
@@ -94,11 +121,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			GetWindowTextW(hEdit, text, 250);
 
 			if (lstrlenW(text) != 0) {
-
-				tie.mask = TCIF_TEXT;
-				tie.pszText = text;
-				count = SendMessageW(hTab, TCM_GETITEMCOUNT, 0, 0);
-				SendMessageW(hTab, TCM_INSERTITEMW, count, (LPARAM)(LPTCITEM)&tie);
+				for (int i = 0; i < 5; i++) {
+					addUser(i);
+					makeOnlineListStruct(i);
+				}
+				doCommand(hwnd, text);
 			}
 			break;
 		}
@@ -107,10 +134,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		switch (WSAGETSELECTEVENT(lParam))
 		{
 		case FD_READ:
-			int ret = recv(client, recvSocketBuffer, BUFFSIZE, 0);
+			ret = recv(client, recvSocketBuffer, BUFFSIZE, 0);
 			if (ret > 0) {
 				recvSocketBuffer[ret] = '\0';
-				processIncomingMessage(recvSocketBuffer);
+				processIncomingMessage(recvSocketBuffer, ret);
 			}
 		default:
 			break;

@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef USER_MANAGER
+#define USER_MANAGER
+
 #define STATE_USER_ONLINE 1
 #define STATE_USER_WAITING 2
 #define STATE_USER_CHATING 3
@@ -12,3 +15,5 @@ int endConversation(int idUserChatting);
 int refuseRequest(int waitingRequest);
 int removeUser(int usertoRemove);
 int getUserStatus(int userID); 
+
+#endif

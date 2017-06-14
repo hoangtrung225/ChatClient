@@ -24,43 +24,14 @@
 
 // TODO: reference additional headers your program requires here
 #include <WinSock2.h>
-
-#define MAX_CHAT_CLIENT 20
-#define MAX_LIST_CLIENT 100
 #define BUFFSIZE 512
 
 extern SOCKET client;
 extern int thisUserId;
 
-extern struct tabClientStruct partnerTab[MAX_CHAT_CLIENT];
-extern struct structClientWaiting clientWaitList[MAX_LIST_CLIENT];
-extern struct structClientOnline clientOnlineList[MAX_LIST_CLIENT];
-
 extern int clientChatID;
-extern HWND hTab, hEdit, hUserList, hWaitList, hButtom, hTagTab, hTagEdit, hTagUserList, hTagWaitList, hChatWindow, hCurrentWindow;
 extern int waitNumber, chatNumber, listNumber;
 
-struct tabClientStruct {
-	int tabNumber;       // tab control 
-	HWND hwndDisplay;   // current child dialog box 
-	int chatClientID;
-};
-
-struct structClientOnline {
-	int listNumber;
-	int chatClientID;
-};
-
-struct structClientWaiting {
-	int listNumber;
-	int chatClientID;
-	int state;
-};
 
 #define STATE_WAIT_USER 0
 #define STATE_WAIT_MESSAGE 1
-
-char recvSocketBuffer[BUFFSIZE];
-char sendSocketBuffer[BUFFSIZE];
-
-wchar_t chatBuffer[BUFFSIZE];

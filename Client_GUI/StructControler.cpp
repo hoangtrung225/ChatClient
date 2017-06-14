@@ -31,9 +31,10 @@ struct tabClientStruct* getTabStruct(int tabIndex) {
 
 int programInitValues(void) {
 	hCurrentWindow = NULL;
-	memset(partnerTab, -1, sizeof partnerTab);
-	memset(clientWaitList, -1, sizeof clientWaitList);
-	memset(clientOnlineList, -1, sizeof clientOnlineList);
+	memset(partnerTab, -1, MAX_CHAT_CLIENT);
+	memset(clientWaitList, -1,  MAX_LIST_CLIENT);
+	memset(clientOnlineList, -1,  MAX_LIST_CLIENT);
+
 	return 0;
 }
 
@@ -126,7 +127,7 @@ int makeOnlineListStruct(int clientID) {
 			clientOnlineList[i].chatClientID = clientID;
 			clientOnlineList[i].listNumber = SendMessageW(hUserList, TCM_GETITEMCOUNT, 0, 0);
 			wprintf_s(textLabel, L"%d[Online]", clientID);
-			SendMessageW(hUserList, LB_INSERTSTRING, clientWaitList[i].listNumber, (LPARAM)textLabel);
+			SendMessageW(hUserList, LB_INSERTSTRING, clientOnlineList[i].listNumber, (LPARAM)textLabel);
 
 			return 0;
 		}

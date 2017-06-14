@@ -3,9 +3,19 @@
 #include "UserManager.h"
 #include "StructControler.h"
 #include "CommandControler.h"
+#include "Client_GUI.h"
 #include "wchar.h"
 
-#define _CRT_SECURE_NO_WARNINGS
+struct userCommand commandSupport[] = {
+	{ 0, L"LGI", L"format LGI[space]<username>[space]<password>: login server with username" },
+	{ 1, L"LGO", L"LGO: log out" },
+	{ 2, L"UDT", L"UDT: get update from server" },
+	{ 3, L"IVT", L"IVT[space]<senderid><receiverid>: invite user to conversation" },
+	{ 4, L"ACP", L"ACP[space]<senderid><receiverid>: accept invitation from user" },
+	{ 5, L"DNY", L"DNY[space]<senderid><receiverid>: deny invitation from user" },
+	{ 6, L"MSG", L"MSG[space]<senderid><receiverid><message>: send message to user" },
+	{ 7, L"RGT", L"RGT[space]<username>[space]<password>: register username with server" }
+};
 
 int processUserInput(HWND hwnd, LPWSTR userInput) {
 	if (userInput[0] == L':')
@@ -202,7 +212,7 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 
 int parseCmdtoCode(LPWSTR userCommand) {
 	for (int i = 0; i < sizeof commandSupport / sizeof( struct userCommand ); i++) {
-		if (StrCmpN(commandSupport[i].CommandName, userCommand, 3) == 0)
+		if (wcsncmp(commandSupport[i].CommandName, userCommand, 3) == 0)
 			return commandSupport[i].CommandCode;
 	}
 	return -1;
@@ -243,4 +253,5 @@ int sendChatMessage(LPWSTR userInput) {
 	SetFocus(hEdit); // set focus
 	SendMessage(hEdit, EM_SETSEL, (WPARAM)index, (LPARAM)index); // set selection - end of text
 	SendMessage(hEdit, EM_REPLACESEL, 0, (LPARAM)chatBuffer); // append!
+	return 0;
 }
