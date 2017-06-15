@@ -31,9 +31,9 @@ struct tabClientStruct* getTabStruct(int tabIndex) {
 
 int programInitValues(void) {
 	hCurrentWindow = NULL;
-	memset(partnerTab, -1, MAX_CHAT_CLIENT);
-	memset(clientWaitList, -1,  MAX_LIST_CLIENT);
-	memset(clientOnlineList, -1,  MAX_LIST_CLIENT);
+	memset(partnerTab, -1, MAX_CHAT_CLIENT * sizeof(tabClientStruct));
+	memset(clientWaitList, -1,  MAX_LIST_CLIENT * sizeof(structClientWaiting));
+	memset(clientOnlineList, -1,  MAX_LIST_CLIENT * sizeof(structClientOnline));
 
 	return 0;
 }
@@ -47,7 +47,7 @@ int makeChatTabStruct(int clientID) {
 
 			TCITEMW tie;
 			tie.mask = TCIF_TEXT;
-			wprintf_s(textLabel, L"%d[partner]", clientID);
+			swprintf_s(textLabel, L"%d[partner]", clientID);
 			tie.pszText = textLabel;
 
 			SendMessageW(hTab, TCM_INSERTITEMW, partnerTab[i].tabNumber, (LPARAM)(LPTCITEM)&tie);
@@ -85,15 +85,15 @@ int makeWaitListStruct(int clientID, int state) {
 	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientWaitList[i].chatClientID == -1) {
 			if (state == STATE_WAIT_USER)
-				wprintf_s(textLabel, L"%d[waiting confirmation]", clientID);
+				swprintf_s(textLabel, L"%d[waiting confirmation]", clientID);
 			else if (state == STATE_WAIT_MESSAGE)
-				wprintf_s(textLabel, L"%d[waiting response]", clientID);
+				swprintf_s(textLabel, L"%d[waiting response]", clientID);
 			else
 				return -1;
 
 			clientWaitList[i].chatClientID = clientID;
 			clientWaitList[i].state = state;
-			clientWaitList[i].listNumber = SendMessageW(hWaitList, TCM_GETITEMCOUNT, 0, 0);
+			clientWaitList[i].listNumber = SendMessageW(hWaitList, LB_GETCOUNT, 0, 0);
 			SendMessageW(hWaitList, LB_INSERTSTRING, clientWaitList[i].listNumber, (LPARAM)textLabel);
 			return 0;
 		}
@@ -125,8 +125,8 @@ int makeOnlineListStruct(int clientID) {
 	for (int i = 0; i < MAX_LIST_CLIENT; i++) {
 		if (clientOnlineList[i].chatClientID == -1) {
 			clientOnlineList[i].chatClientID = clientID;
-			clientOnlineList[i].listNumber = SendMessageW(hUserList, TCM_GETITEMCOUNT, 0, 0);
-			wprintf_s(textLabel, L"%d[Online]", clientID);
+			clientOnlineList[i].listNumber = SendMessageW(hUserList, LB_GETCOUNT, 0, 0);
+			swprintf_s(textLabel, L"%d[Online]", clientID);
 			SendMessageW(hUserList, LB_INSERTSTRING, clientOnlineList[i].listNumber, (LPARAM)textLabel);
 
 			return 0;

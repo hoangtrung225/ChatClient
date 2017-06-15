@@ -59,6 +59,7 @@ int addUser(int userID) {
 	userWaiting[0] = userID;
 
 	//increase userChatting PTR
+	userWaiting = userWaiting + 1;
 	userChatting = userChatting + 1;
 	Unlock();
 	return 0;

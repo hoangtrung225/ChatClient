@@ -67,14 +67,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 		100, 100, 600, 550, 0, 0, hInstance, 0);
 
+	//Request to connect server
+	if (connect(client, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
+		swprintf_s(chatBuffer, L"Error cannot connect to server: %d", WSAGetLastError());
+		MessageBox(NULL, chatBuffer, L"Error!", MB_OK);
+
+		return 0;
+	}
+
 	//request window message for hwnd
 	WSAAsyncSelect(client, hwnd, WM_SOCKET, FD_CLOSE | FD_READ);
-
-	//Request to connect server
-	/*if (connect(client, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
-	MessageBox(NULL, L"Cannot connect to server!", L"Error!", MB_OK);
-	return 0;
-	}*/
 
 	initWindow(hwnd);
 
@@ -103,11 +105,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		windowPotision(hwnd);
 
-		for (int i = 0; i < 5; i++) {
-			addUser(i);
-			makeOnlineListStruct(i);
-		}
-
 		SendMessage(hEdit, EM_SETLIMITTEXT, MAX_TAB_LEN, 0);
 
 		break;
@@ -121,11 +118,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			GetWindowTextW(hEdit, text, 250);
 
 			if (lstrlenW(text) != 0) {
-				for (int i = 0; i < 5; i++) {
-					addUser(i);
-					makeOnlineListStruct(i);
-				}
-				doCommand(hwnd, text);
+				processUserInput(hwnd, text);
 			}
 			break;
 		}
@@ -158,8 +151,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 					hCurrentWindow = tabStruct->hwndDisplay;
 					//resize chat window
 
-					TabCtrl_AdjustRect(hTab, FALSE, &rcChatWindow);
-					SetWindowPos(hCurrentWindow, 0, rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, 0);
+					SetWindowPos(hCurrentWindow, 0, rcTab.left, rcTab.top + 20 + TABMARGIN, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - 20 - TABMARGIN, 0);
+
 					ShowWindow(hCurrentWindow, SW_SHOW);
 					break;
 				}
@@ -260,7 +253,7 @@ int resizeWindow(HWND hwnd) {
 	//	hwnd, (HMENU)0, NULL, NULL);
 	SetWindowPos(hButtom, 0, rcButtom.left, rcButtom.top, rcButtom.right - rcButtom.left, rcButtom.bottom - rcButtom.top, 0);
 
-	SetWindowPos(hCurrentWindow, 0, rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, 0);
+	SetWindowPos(hCurrentWindow, 0, rcTab.left, rcTab.top + tagTabH + TABMARGIN, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH - TABMARGIN, 0);
 
 	return 0;
 }
@@ -272,7 +265,7 @@ int initWindow(HWND hwnd) {
 		rcUserList.left, rcUserList.top, tagWaitListW, tagWaitListH,
 		hwnd, (HMENU)0, NULL, NULL);
 
-	hUserList = CreateWindowW(WC_LISTBOXW, NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
+	hUserList = CreateWindowW(WC_LISTBOXW, NULL, WS_VSCROLL | WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
 		rcUserList.left, rcUserList.top + tagWaitListH, rcUserList.right - rcUserList.left, rcUserList.bottom - rcUserList.top - tagWaitListH,
 		hwnd, (HMENU)ID_LIST, NULL, NULL);
 
@@ -280,7 +273,7 @@ int initWindow(HWND hwnd) {
 		rcWaitList.left, rcWaitList.top, tagWaitListW, tagWaitListH,
 		hwnd, (HMENU)0, NULL, NULL);
 
-	hWaitList = CreateWindowW(WC_LISTBOXW, NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
+	hWaitList = CreateWindowW(WC_LISTBOXW, NULL, WS_VSCROLL | WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
 		rcWaitList.left, rcWaitList.top + tagWaitListH, rcWaitList.right - rcWaitList.left, rcWaitList.bottom - rcWaitList.top - tagWaitListH,
 		hwnd, (HMENU)ID_LIST, NULL, NULL);
 
@@ -321,12 +314,15 @@ HWND makeNewChatWindow(void) {
 
 	int tagTabH = 20;
 	int tagTabW = rcTab.right - rcTab.left;
-	
-	TabCtrl_AdjustRect(hTab, FALSE, &rcChatWindow);
 
-	HWND returnHwnd = CreateWindowW(WC_EDITW, NULL, WS_VSCROLL | WS_BORDER | WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY,
-		rcChatWindow.left, rcChatWindow.top, rcChatWindow.right - rcChatWindow.left, rcChatWindow.bottom - rcChatWindow.top, hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
-	if (hCurrentWindow == NULL)
+	HWND returnHwnd = CreateWindowW(WC_LISTBOXW, NULL , WS_VSCROLL | WS_BORDER | WS_VISIBLE | WS_CHILD ,
+		rcTab.left, rcTab.top + tagTabH + TABMARGIN, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top - tagTabH - TABMARGIN
+		, hwnd, (HMENU)ID_TABCTRL, NULL, NULL);
+	if (hCurrentWindow == NULL) {
 		hCurrentWindow = returnHwnd;
+		ShowWindow(hCurrentWindow, SW_SHOW);
+	}
+	ShowWindow(returnHwnd, SW_HIDE);
+
 	return returnHwnd;
 }

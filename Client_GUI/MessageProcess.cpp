@@ -2,6 +2,8 @@
 #include "MessageProcess.h"
 #include "UserManager.h"
 #include "StructControler.h"
+#include "CommandControler.h"
+#include "Client_GUI.h"
 
 struct userCommandChar commandSupportChar[] = {
 	{ 0, "LGI", "format LGI[null space]<username>[null space]<password>: login server with username" },
@@ -17,6 +19,7 @@ struct userCommandChar commandSupportChar[] = {
 int processIncomingMessage(char* messageReceive, int lenMessage) {
 	int messagetoProcess = 0;
 	char* tmpPointer = NULL;
+	int senderID;
 	switch (parseCmdtoCode(messageReceive))
 	{
 	//update message user from server
@@ -29,6 +32,57 @@ int processIncomingMessage(char* messageReceive, int lenMessage) {
 				break;
 			messagetoProcess = messagetoProcess - processed;
 			tmpPointer = tmpPointer + processed;
+		}
+		break;
+	//ivitation come receive from user
+	case 3:
+		senderID = ((struct packetUserHeader*)messageReceive)->senderID;
+		//add user to waiting list for user confirmation
+		if (addWaiting(senderID) < 0)
+			return -1;
+		removeOnlineListStruct(senderID);
+		makeWaitListStruct(senderID, STATE_WAIT_USER);
+		break;
+
+	//accept conversation coming from user
+	case 4:
+		senderID = ((struct packetUserHeader*)messageReceive)->senderID;
+		//confirm if this user in waiting confirm state
+		for (int i = 0; i < MAX_LIST_CLIENT; i++) {
+			if (clientWaitList[i].chatClientID == senderID && clientWaitList[i].state == STATE_WAIT_MESSAGE) {
+				//add to Chating group
+				if (addChating(senderID) < 0)
+					return -1;
+				removeWaitListStruct(senderID);
+				makeChatTabStruct(senderID);
+			}
+		}
+		break;
+
+	//user deny chat request return user to online list
+	case 5:
+		senderID = ((struct packetUserHeader*)messageReceive)->senderID;
+		//confirm if this user in waiting mesaage state
+		for (int i = 0; i < MAX_LIST_CLIENT; i++) {
+			if (clientWaitList[i].chatClientID == senderID && clientWaitList[i].state == STATE_WAIT_MESSAGE) {
+				//return  to online group
+				if (refuseRequest(senderID) < 0)
+					return -1;
+				removeWaitListStruct(senderID);
+				makeOnlineListStruct(senderID);
+			}
+		}
+		break;
+
+	//received message from user
+	case 6:
+		senderID = ((struct packetUserHeader*)messageReceive)->senderID;
+		for (int i = 0; i < MAX_CHAT_CLIENT; i++) {
+			if (partnerTab[i].chatClientID == senderID) {
+				//return  to online group
+				wsprintf(chatBuffer, L"User<%d>: %s", senderID, messageReceive + sizeof(struct packetUserHeader) );
+				SendMessage(partnerTab[i].hwndDisplay, LB_ADDSTRING, 0, (LPARAM)chatBuffer);
+			}
 		}
 		break;
 	default:

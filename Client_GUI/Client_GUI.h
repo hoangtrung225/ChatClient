@@ -10,7 +10,6 @@
 #define MAX_TAB_LEN 15
 #define MARGIN 10
 #define TABMARGIN 40
-#define TABMARGIN 40 
 
 #define SERVER_PORT 8080
 #define SERVER_ADDR "127.0.0.1"

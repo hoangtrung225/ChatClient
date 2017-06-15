@@ -14,7 +14,9 @@ struct userCommand commandSupport[] = {
 	{ 4, L"ACP", L"ACP[space]<senderid><receiverid>: accept invitation from user" },
 	{ 5, L"DNY", L"DNY[space]<senderid><receiverid>: deny invitation from user" },
 	{ 6, L"MSG", L"MSG[space]<senderid><receiverid><message>: send message to user" },
-	{ 7, L"RGT", L"RGT[space]<username>[space]<password>: register username with server" }
+	{ 7, L"RGT", L"RGT[space]<username>[space]<password>: register username with server" },
+	{ 8, L"TER", L"TER[space]<senderid><receiverid>: terminate conversation"},
+	{ 100, L"TST", L"TST[space]<number code>: add 5 online user for testing"},
 };
 
 int processUserInput(HWND hwnd, LPWSTR userInput) {
@@ -98,7 +100,7 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 				return -1;
 
 			removeOnlineListStruct(selectedStruct->chatClientID);
-			}
+		}
 			break;
 
 		//send Accept
@@ -141,7 +143,7 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 			if (makeChatTabStruct(selectedStruct->chatClientID) < 0)
 				return -1;
 			removeWaitListStruct(selectedStruct->chatClientID);
-			}
+		}
 			break;
 
 		//send DENY message
@@ -179,16 +181,17 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
 				return -1;
 			}
-
-			//remove from waiting list, push back into online list
-			if (removeWaitListStruct(selectedStruct->chatClientID) < 0)
+			if (makeOnlineListStruct(selectedStruct->chatClientID) < 0)
 				return -1;
-			makeOnlineListStruct(selectedStruct->chatClientID);
+			//remove from waiting list, push back into online list
+			removeWaitListStruct(selectedStruct->chatClientID);
+				
 		}
 			break;
 		case 6: 
-			sendChatMessage(userCommand + 1 + 4);
+			sendChatMessage(userCommand + 4);
 			break;
+		//regist with server
 		case 7: {
 			strncpy(sendSocketBuffer, "RGT", 3);
 			sendSocketBuffer[3] = '\0';
@@ -204,6 +207,67 @@ int doCommand(HWND hwnd, LPWSTR userCommand) {
 
 			send(client, sendSocketBuffer, 4 + usernameLen + 1 + passwordLen + 1, 0);
 		}
+			break;
+		//send TERMINATE message
+		case 8: {
+			struct packetUserHeader headerPacket;
+			strncpy(headerPacket.CommandName, "TER", 3);
+			headerPacket.CommandName[3] = '\0';
+
+			headerPacket.senderID = thisUserId;
+			if (thisUserId == -1) {
+				MessageBox(NULL, L"Login to send Deny message", L"Error!", MB_OK);
+				return -1;
+			}
+
+			int tabCurrentSelect = (int)SendMessageW(hTab, TCM_GETCURSEL, 0, 0);
+			if (tabCurrentSelect == LB_ERR) {
+				MessageBox(NULL, L"Select an chating user to terminate conversation", L"Error!", MB_OK);
+				return -1;
+			}
+			struct tabClientStruct* selectedStruct = getTabStruct(tabCurrentSelect);
+			headerPacket.receiverID = selectedStruct->chatClientID;
+
+			//check if user is in waiting list
+			if (endConversation(selectedStruct->chatClientID) < 0)
+				return -1;
+
+			memcpy(sendSocketBuffer, &headerPacket, sizeof headerPacket);
+			if (send(client, sendSocketBuffer, sizeof headerPacket, 0) < 0) {
+				MessageBox(NULL, L"Error: connection lost", L"Error!", MB_OK);
+				return -1;
+			}
+			if (makeOnlineListStruct(selectedStruct->chatClientID) < 0)
+				return -1;
+
+			//remove from waiting list, push back into online list
+			removeChatTabStruct(selectedStruct->chatClientID);
+		}
+			break;
+		case 100: {
+			if (userCommand[4] == L'0') {
+				for (int i = 0; i < 5; i++) {
+					addUser(i);
+					makeOnlineListStruct(i);
+				}
+			}
+			if (userCommand[4] == L'1') {
+				for (int i = 100; i < 105; i++) {
+					addUser(i);
+					addWaiting(i);
+					addChating(i);
+					makeChatTabStruct(i);
+				}
+			}
+			if (userCommand[4] == L'2') {
+				for (int i = 200; i < 205; i++) {
+				addUser(i);
+				addWaiting(i);
+				makeWaitListStruct(i, STATE_WAIT_USER);
+				}
+			}
+		}
+			break;
 		default:
 			break;
 	}
@@ -247,11 +311,10 @@ int sendChatMessage(LPWSTR userInput) {
 	}
 
 	//add message to Chat window 
-	wprintf_s(chatBuffer, L"Me: %s", userInput);
+	wsprintf(chatBuffer, L"Me: %s", userInput);
 
-	int index = GetWindowTextLength(hEdit);
-	SetFocus(hEdit); // set focus
-	SendMessage(hEdit, EM_SETSEL, (WPARAM)index, (LPARAM)index); // set selection - end of text
-	SendMessage(hEdit, EM_REPLACESEL, 0, (LPARAM)chatBuffer); // append!
+	SendMessage(hCurrentWindow, LB_ADDSTRING, 0, (LPARAM)chatBuffer);
+	ShowWindow(hCurrentWindow, SW_SHOW);
+
 	return 0;
 }
