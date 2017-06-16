@@ -28,7 +28,7 @@ int processIncomingMessage(char* messageReceive, int lenMessage) {
 		messagetoProcess = lenMessage - 4;
 		while (messagetoProcess > 0) {
 			int processed = updateUserInfo(tmpPointer);
-			if (messagetoProcess <= 0)
+			if (processed <= 0)
 				break;
 			messagetoProcess = messagetoProcess - processed;
 			tmpPointer = tmpPointer + processed;
@@ -102,7 +102,7 @@ int parseCmdtoCode(char* message) {
 char username[USERNAME_SIZE];
 //process struct userupdate start at bufferPtr return lenght of processed string
 int updateUserInfo(char* bufferPtr) {
-	int ret = 0;
+	int ret = -1;
 	int stateUser = 0;
 	int userID = ((struct userUpdate*) bufferPtr)->userID;
 	int userStatus = ((struct userUpdate*) bufferPtr)->status;

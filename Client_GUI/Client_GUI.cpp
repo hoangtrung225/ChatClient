@@ -132,8 +132,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				recvSocketBuffer[ret] = '\0';
 				processIncomingMessage(recvSocketBuffer, ret);
 			}
-		default:
-			break;
+		case FD_CLOSE:
+			exit(0);
 		}
 	case WM_NOTIFY:
 		//Is event for tab change
